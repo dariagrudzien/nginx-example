@@ -1,4 +1,4 @@
-user www-data;
+user {{ nginx_user }};
 worker_processes auto;
 pid /run/nginx.pid;
 include /etc/nginx/modules-enabled/*.conf;
@@ -15,12 +15,16 @@ http {
 		index {{ index_location}};
 		server_name {{ server_name }};
 
+		# TODO: this could handle images as well
 		location / {
 			if ($request_uri ~ ^/(.*)\.html) {
 				return 302 /$1;
 			}
 			try_files $uri $uri.html $uri/ =404;
 		}
+
+		# TODO: these auth endpoints could be done better
+		# perhaps using regex instead of individual locations
 
 		location /uptime {
  			auth_basic "Administrator’s Area";
@@ -37,10 +41,6 @@ http {
     		auth_basic_user_file {{ auth_location }};
 		}
 	}
-
-	# figure out users
-
-	# figure out HTTPS redirect
 
 	##
 	# Basic Settings

@@ -1,0 +1,88 @@
+# Installs Nginx webserver on a Ubuntu 20.04 host
+
+- name: Install Prerequisites
+  apt:
+    update_cache: yes
+    state: latest
+    force_apt_get: yes
+    upgrade: full
+
+- name: Install nginx
+  apt:
+    name: nginx
+    state: latest
+  become: true
+  become_user: root
+  register: nginx
+  failed_when: nginx.failed == 'true'
+  changed_when: nginx.changed =='true'
+
+# Reboot the host to be on the safe side
+- name: Reboot host
+  reboot:
+    pre_reboot_delay: 1
+    post_reboot_delay: 300 # 5 * 60
+  become: true
+  become_user: root
+  register: server
+  # https://docs.ansible.com/ansible/latest/modules/reboot_module.html#return-values
+  failed_when: server.rebooted != true
+  changed_when: server.rebooted == true
+
+
+# Prepare setup for authentication
+# https://docs.nginx.com/nginx/admin-guide/security-controls/configuring-http-basic-authentication/
+- name: Install utils to create passwords with htpasswd
+  apt:
+    name: apache2-utils
+    state: latest
+  become: true
+  become_user: root
+  register: apache
+  failed_when: apache.failed == 'true'
+  changed_when: apache.changed =='true'
+
+- name: Create the empty password file
+  copy:
+    content: ""
+    dest: /etc/nginx/.htpasswd
+    force: no
+    group: root
+    owner: root
+    mode: 0644 # -rw-r--r--
+  register: htpasswd
+  failed_when: htpasswd.failed == 'true'
+
+- name: Create passwords for users
+  # force using bcrypt instead of default md5
+  shell: 'echo "{{ item.pwd }}" | sudo htpasswd -i -B -n "{{ item.name}}" >> "{{ auth_location }}"'
+  register: user
+  failed_when: user.failed == 'true'
+  changed_when: '"Adding password for" in user.stderr'
+  # disable logging passwords into output
+  no_log: true
+  # TODO: this could be done better to allow adding as many users as needed
+  loop:
+    - { name: 'alice.doe', pwd: '{{ alice_doe_pwd }}'}
+    - { name: 'jim.doe', pwd: '{{ jim_doe_pwd }}'}
+
+- name: Configure Nginx
+  template:
+    src: templates/nginx_conf.j2
+    dest: "/etc/nginx/nginx.conf"
+    owner: root
+    group: root
+    mode: 0644 # -rw-r--r--
+    backup: yes
+  become: yes
+  register: nginx_conf
+  failed_when: nginx_conf.failed == 'true'
+  # restart Nginx to enable the changes
+  notify: restart nginx
+
+- name: Verify that nginx is installed and config is correct
+  shell: nginx -t
+  become: true
+  become_user: root
+  register: nginx_check
+  failed_when: '"configuration file /etc/nginx/nginx.conf test is successful" in nginx_check.stderr_lines'

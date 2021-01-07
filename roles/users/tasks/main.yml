@@ -1,0 +1,91 @@
+# Creates two user accounts on a Ubuntu 20.04 host
+
+- name: Create groups for users
+  group:
+    name: "{{ item }}"
+    state: present
+  register: group
+  become: true
+  become_user: root
+  changed_when: group.name == "{{ item }}"
+  failed_when: group.state != "present"
+  loop:
+    - "john.doe"
+    - "sue.doe"
+
+- name: Create users with sudo
+  user:
+    name: "{{ item }}"
+    append: true
+    groups: ["{{ item }}", "sudo"]
+    shell: /bin/bash
+    state: present
+  register: su_user
+  become: true
+  become_user: root
+  changed_when: su_user.changed == "true"
+  failed_when: (su_user.state != "present") or (su_user.failed == "true")
+  # TODO: this could be done better to allow adding as many users as needed
+  loop:
+    - 'john.doe'
+
+- name: Create regular users sudo
+  user:
+    name: "{{ item }}"
+    append: true
+    groups: ["{{ item }}"]
+    shell: /bin/bash
+    state: present
+  register: user
+  become: true
+  become_user: root
+  changed_when: user.changed == "true"
+  failed_when: (user.state != "present") or (user.failed == "true")
+  # TODO: this could be done better to allow adding as many users as needed
+  loop:
+    - 'sue.doe'
+
+- name: Create .ssh folders
+  file:
+    path: "/home/{{ item}}/.ssh"
+    state: directory
+    owner: "{{ item }}"
+    group: "{{ item }}"
+    mode: 0700 # -rwx------
+  register: dir
+  become: true
+  become_user: root
+  loop:
+    - 'sue.doe'
+    - 'john.doe'
+  changed_when: dir.changed == 'true'
+
+- name: Create SSH files
+  file:
+    path: "/home/{{ item }}/.ssh/id_rsa"
+    owner: "{{ item }}"
+    group: "{{ item }}"
+    mode: 0700 # -rwx------
+    state: touch
+  register: file
+  become: true
+  become_user: root
+  loop:
+    - 'sue.doe'
+    - 'john.doe'
+  changed_when: file.changed == 'true'
+
+- name: Copy SSH files
+  copy:
+    src: "../../../{{ item }}"
+    dest: "/home/{{ item }}/.ssh/id_rsa"
+    owner: "{{ item }}"
+    group: "{{ item }}"
+    mode: 0700 # -rwx------
+  register: key
+  become: true
+  become_user: root
+  changed_when: key.changed == 'true'
+  loop:
+    - 'sue.doe'
+    - 'john.doe'

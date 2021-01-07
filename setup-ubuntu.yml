@@ -45,4 +45,4 @@
     - install_docker
     - install_nginx
     - cron
-
+    - users

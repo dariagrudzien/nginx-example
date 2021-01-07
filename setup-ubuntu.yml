@@ -1,0 +1,36 @@
+---
+- name: Setup webserver on Ubuntu machines
+  hosts: all
+  become: yes
+  gather_facts: no
+  serial: 1
+
+  pre_tasks:
+    - name: Who is running the update
+      become: false
+      local_action: command whoami
+      register: whoami
+    - name: Announce start to slack
+      uri:
+        url: "https://hooks.slack.com/services/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"
+        method: POST
+        body: '{"text":"[ansible][{{inventory_hostname}}] {{whoami.stdout}} running setup webserver on a Ubuntu machine :rocket: "}'
+        status_code: 200
+        body_format: json
+      delegate_to: localhost
+      become: false
+
+  post_tasks:
+    - name: Announce finish to slack
+      uri:
+        url: "https://hooks.slack.com/services/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"
+        method: POST
+        body: '{"text":"[ansible][{{inventory_hostname}}] {{whoami.stdout}} completed webserver setup on a Ubuntu machine :thumbsup: "}'
+        status_code: 200
+        body_format: json
+      delegate_to: localhost
+      become: false
+
+  roles:
+    - install-docker
+

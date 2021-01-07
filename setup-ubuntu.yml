@@ -4,7 +4,16 @@
   become: yes
   gather_facts: no
   serial: 1
+  vars:
+    webserver_port: 80
+    webserver_root: "/var/www/html"
+    index_location: "index.html"
+    server_name: "thunder"
+    auth_location: "/etc/nginx/.htpasswd"
 
+
+  # Add pre and post tasks to send announcements to a Slack channel
+  # helps with operation visibility
   pre_tasks:
     - name: Who is running the update
       become: false
@@ -32,5 +41,6 @@
       become: false
 
   roles:
-    - install-docker
+    - install_docker
+    - install_nginx
 

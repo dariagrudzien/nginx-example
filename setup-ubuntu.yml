@@ -10,6 +10,7 @@
     index_location: "index.html"
     server_name: "thunder"
     auth_location: "/etc/nginx/.htpasswd"
+    nginx_user: "www-data"
 
 
   # Add pre and post tasks to send announcements to a Slack channel
@@ -21,7 +22,7 @@
       register: whoami
     - name: Announce start to slack
       uri:
-        url: "https://hooks.slack.com/services/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"
+        url: "{{ slack_webhook }}"
         method: POST
         body: '{"text":"[ansible][{{inventory_hostname}}] {{whoami.stdout}} running setup webserver on a Ubuntu machine :rocket: "}'
         status_code: 200
@@ -32,7 +33,7 @@
   post_tasks:
     - name: Announce finish to slack
       uri:
-        url: "https://hooks.slack.com/services/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"
+        url: "{{ slack_webhook }}"
         method: POST
         body: '{"text":"[ansible][{{inventory_hostname}}] {{whoami.stdout}} completed webserver setup on a Ubuntu machine :thumbsup: "}'
         status_code: 200
@@ -43,4 +44,5 @@
   roles:
     - install_docker
     - install_nginx
+    - cron
 

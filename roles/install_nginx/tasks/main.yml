@@ -17,6 +17,12 @@
   failed_when: nginx.failed == 'true'
   changed_when: nginx.changed =='true'
 
+- name: Change webserver root file permissions
+  file:
+    path: "{{ webserver_root }}"
+    owner: "{{ nginx_user }}"
+    group: "{{ nginx_user }}"
+
 # Reboot the host to be on the safe side
 - name: Reboot host
   reboot:
@@ -57,6 +63,8 @@
   # force using bcrypt instead of default md5
   shell: 'echo "{{ item.pwd }}" | sudo htpasswd -i -B -n "{{ item.name}}" >> "{{ auth_location }}"'
   register: user
+  become: true
+  become_user: root
   failed_when: user.failed == 'true'
   changed_when: '"Adding password for" in user.stderr'
   # disable logging passwords into output
@@ -65,6 +73,35 @@
   loop:
     - { name: 'alice.doe', pwd: '{{ alice_doe_pwd }}'}
     - { name: 'jim.doe', pwd: '{{ jim_doe_pwd }}'}
+
+- name: Copy files
+  copy:
+    src: "{{ item }}"
+    dest: "{{ webserver_root }}/"
+    force: no
+    group: ubuntu
+    owner: ubuntu
+    mode: 0644 # -rw-r--r--
+  register: cp_files
+  failed_when: cp_files.failed == 'true'
+  changed_when: cp_files.changed == 'true'
+  with_fileglob:
+    - files/*.html
+    - files/*.jpg
+
+- name: Copy scripts
+  copy:
+    src: "{{ item }}"
+    dest: "{{ webserver_root }}/"
+    force: no
+    group: ubuntu
+    owner: ubuntu
+    mode: 0755 # -rwxr-xr-x
+  register: cp_scripts
+  failed_when: cp_scripts.failed == 'true'
+  changed_when: cp_scripts.changed == 'true'
+  with_fileglob:
+    - files/*.sh
 
 - name: Configure Nginx
   template:

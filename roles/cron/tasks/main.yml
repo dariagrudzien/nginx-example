@@ -1,0 +1,39 @@
+# Setup cron jobs to run scripts and generate html files
+- name: "Create the IPS cron job"
+  cron:
+    job: "{{ webserver_root }}/ips.sh > {{ webserver_root }}/ips.html"
+    name: "ips"
+    minute: "*/1" # every minute
+    state: present
+    user: "{{ nginx_user }}"
+    backup: yes
+  become: yes
+  register: ips
+  changed_when: '"ips" in ips.jobs'
+  failed_when: ips.failed == 'True'
+
+- name: "Create the SPACE cron job"
+  cron:
+    job: "{{ webserver_root }}/space.sh > {{ webserver_root }}/space.html"
+    name: "space"
+    minute: "*/1" # every minute
+    state: present
+    user: "{{ nginx_user }}"
+    backup: yes
+  become: yes
+  register: space
+  changed_when: '"ips" in space.jobs'
+  failed_when: space.failed == 'True'
+
+- name: "Create the UPTIME cron job"
+  cron:
+    job: "{{ webserver_root }}/uptime.sh > {{ webserver_root }}/uptime.html"
+    name: "uptime"
+    minute: "*/1" # every minute
+    state: present
+    user: "{{ nginx_user }}"
+    backup: yes
+  become: yes
+  register: uptime
+  changed_when: '"ips" in uptime.jobs'
+  failed_when: uptime.failed == 'True'

@@ -5,6 +5,7 @@
 * This is a WIP PoC. Not all roles work completely.
 * Secrets are stored in plaintext. I know that this should never be happening. I don't have experience handling secrets with Ansible. Based on my research Ansible Vault should be used for encrypting data at rest https://docs.ansible.com/ansible/latest/user_guide/vault.html#vault and the `no_log` option should be used to avoid disclosing secrets used in playbooks.
 * I don't have a lot of experience with Linux roles and I'm not entirely certain that ownership of certain directories is set correctly.
+* When it comes to scripts generating pages - maybe Bash isn't the most elegant way to do it, but I found it the fastest to gather the data required.
 
 ## Prerequisites
 
@@ -66,7 +67,7 @@ I've been following the official Docker guide https://docs.docker.com/engine/ins
 
 ### Setting up a reverse proxy
 
-I believe that in order to expose a content from a Docker container on a specific path, it will require setting up a reverse proxy with Nginx and Docker compose. I found multiple guides on how to do it, including https://dzone.com/articles/how-to-nginx-reverse-proxy-with-docker-compose
+I believe that in order to expose a content from a Docker container on a specific path, it will require setting up a reverse proxy with Nginx and Docker Compose. I found multiple guides on how to do it, including https://dzone.com/articles/how-to-nginx-reverse-proxy-with-docker-compose
 
 Since I haven't been able to finish installing Docker completely, and haven't had a chance to play with Docker Compose in the past, I threw in a towel here for now.
 
@@ -74,7 +75,7 @@ Since I haven't been able to finish installing Docker completely, and haven't ha
 
 I think there are two ways to do it:
 
-1. Locally generate a certificate, copy it to the host machine and mofidy the Nginx config to setup redirects. I found these materials on how to do it:
+1. Locally generate a certificate, copy it to the host machine and modify the Nginx config to setup redirects. I found these materials on how to do it:
 
 * https://letsencrypt.org/docs/certificates-for-localhost/
 * http://nginx.org/en/docs/http/configuring_https_servers.html

@@ -12,7 +12,6 @@
     auth_location: "/etc/nginx/.htpasswd"
     nginx_user: "www-data"
 
-
   # Add pre and post tasks to send announcements to a Slack channel
   # helps with operation visibility
   pre_tasks:
